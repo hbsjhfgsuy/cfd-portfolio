@@ -1,0 +1,7 @@
+# 统一按文本处理，检出时用 LF，避免 Windows/CI 换行噪音
+* text=auto
+
+*.png binary
+*.jpg binary
+*.pdf binary
+*.zip binary
