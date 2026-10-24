@@ -11,9 +11,9 @@
 
 | # | 项目 | 对标依据 | 关键指标 | 状态 |
 |---|------|----------|----------|------|
-| 01 | 圆管层流（Poiseuille） | 解析解、f = 64/Re | 速度剖面 / 压降误差 < 1% | ⬜ 未开始 |
-| 02 | 后台阶流动 | Armaly 1983；Driver & Seegmiller 1985 | 再附着长度 x/H 误差 ≤ 10% | ⬜ 未开始 |
-| 03 | **Sandia Flame D 湍流燃烧** | TNF Workshop 实验数据 | 轴向温度误差 < 15% | 🔵 数据已就绪 |
+| 01 | **基础算例集**（圆管层流 / 后台阶 / 平板边界层 / 翅片共轭传热） | 解析解；Armaly 1983；Driver & Seegmiller 1985 | 各算例误差达标（压降 <1%、x/H ≤10%） | ⬜ 未开始 |
+| 02 | **Sandia Flame D 湍流燃烧** | TNF Workshop 实验数据 | 轴向温度误差 < 15% | 🔵 数据已就绪 |
+| 03 | **燃气灶大气式燃烧器** | Boggavarapu 2014；GB 30720 | 一次空气系数扫描趋势自洽 | ⬜ 未开始 |
 
 > 状态图例：⬜ 未开始 · 🔵 进行中 · ✅ 已完成
 
@@ -36,9 +36,9 @@ cfd-portfolio/
 │  └─ plot_flamed.py         生成参考数据图
 ├─ docs/figures/             报告中引用的图
 ├─ projects/
-│  ├─ 01-pipe-laminar/
-│  ├─ 02-backward-facing-step/
-│  └─ 03-sandia-flamed/
+│  ├─ 01-basics/             基础算例集（4 个检查点）
+│  ├─ 02-flamed/             Sandia Flame D
+│  └─ 03-burner/             燃气灶燃烧器
 └─ requirements.txt
 ```
 
