@@ -38,6 +38,8 @@ D:\Program Files\ANSYS Inc\v252\fluent\  下没有 tutorial 目录
 
 ## 2. 几何（Workbench → SpaceClaim）
 
+> 更详细的 2D 画法与网格操作见 [2d-modeling-meshing.md](2d-modeling-meshing.md)。
+
 ✅ **2.1 建系统**
 
 Workbench 左侧 Toolbox → Component Systems → 把 **Fluid Flow (Fluent)** 拖进 Project Schematic。
