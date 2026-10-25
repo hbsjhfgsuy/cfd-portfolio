@@ -123,3 +123,57 @@ VOF-to-DPM 给出的分布，本质是"喷嘴下游某个截面的液滴统计"�
 - Fluent 帮助：Multiphase → VOF → VOF-to-DPM
 - ANSYS 白皮书：Modeling Liquid Atomization（Adaptive Blob-based Primary atomization, ABP）
 - 文献：2018 年后出现 VOF-to-DPM 的喷雾研究多用 2D 轴对称 + AMR
+
+---
+
+## 8. 同类研究的实现路线（Dasgupta et al., 2022）
+
+> Dasgupta, Pal, Torelli, Som, Paulson, Libera, Stan,
+> *Combustion and Flame* **236** (2022) 111789.
+> "CFD modeling and analysis of silica nanoparticle synthesis in a flame spray pyrolysis reactor"
+
+这篇论文研究的是**气动雾化喷嘴 + 管式反应器 + 喷雾火焰**，和本项目的"喷雾发生器 + 管式炉"结构同源。
+它用的**就是解耦路线**，而且**没有用 VOF-to-DPM**：
+
+| 环节 | 做法 | 参数 |
+|------|------|------|
+| ① 一次雾化 | **VOF + LES**，只算喷嘴附近 | HRIC 界面捕捉；**域仅 20 mm 高 × 20 mm 直径** |
+| ② 提取分布 | 统计 1 ms 内所有液滴的 V/A，拟合 Rosin-Rammler | d32 = 6Vp/Ap；CDF = 1 − exp(−ξ^q) |
+| ③ 二次破碎 | 拉格朗日喷雾 **solid-cone + TAB** | 分布来自 ② |
+| ④ 蒸发 | **Frossling** 模型，多组分液滴 | — |
+| ⑤ 燃烧 | WSR 有限速率，64 组分 / 392 反应 | — |
+| ⑥ 颗粒成长 | 混合矩方法（HMOM，4 矩） | — |
+| ⑦ 反应器网格 | RANS，AMR | 最小 0.25 mm，CFL 0.7，Δt ~1e-7 s |
+
+### 三个可以直接拿来用的结论
+
+1. **VOF 只算 20 mm × 20 mm 的小域**。这是这条路可行的关键——不是把整个喷雾锥都塞进 VOF。
+2. **分布靠后处理拟合**，不是靠 VOF-to-DPM 实时转换：累积一段时间（1 ms）内的液滴，算 d32，拟合 RR 的 q。公式：
+   ```text
+   d32 = 6 · V_liquid_total / A_liquid_total
+   CDF = 1 − exp(−ξ^q),  ξ = r / r̄,  r̄ = Γ(1 − 1/q) · d32 / 2
+   ```
+3. **解耦后的 RANS 域**用最小 0.25 mm 网格 + AMR 就够，不需要微米级。
+
+### 对本方案的影响
+
+优先级建议调整为：
+
+| 方案 | 成本 | 适用 |
+|------|------|------|
+| **A. VOF（小域）→ 拟合 RR → 解耦 DPM**（论文路线） | 低 | ✅ 目标是"给管式炉提供入口分布"时，这条路足够 |
+| B. VOF-to-DPM（单域一体化） | 高 | 需要"雾化与下游强耦合"时才值得 |
+
+也就是说：**VOF-to-DPM 是可选升级，不是必需**。先按 A 做，能出分布；如果后面发现下游对流场的影响必须反馈回近场，再考虑 B。
+
+### 工具映射（论文用 CONVERGE，这里是 Fluent）
+
+| 论文 | Fluent 对应 |
+|------|-------------|
+| VOF + HRIC | Multiphase → VOF + **HRIC** 离散（Fluent 有这个格式） |
+| LES | Models → Viscous → **LES**（WALE/Smagorinsky） |
+| solid-cone + Rosin-Rammler | DPM → Injection type **cone** + RR 分布 |
+| TAB | DPM → Breakup → **TAB** |
+| Frossling | DPM → Droplet 蒸发默认模型 |
+| WSR 有限速率 | Fluent 用 EDC 或 Partially Premixed 代替 |
+| HMOM 颗粒成长 | Fluent 无内置，需要 UDF（本项目不需要） |
